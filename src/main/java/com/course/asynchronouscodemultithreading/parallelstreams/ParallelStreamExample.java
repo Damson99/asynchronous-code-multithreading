@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static com.course.asynchronouscodemultithreading.util.CommonUtil.delay;
+import static com.course.asynchronouscodemultithreading.util.CommonUtil.*;
 import static com.course.asynchronouscodemultithreading.util.LoggerUtil.*;
 
 public class ParallelStreamExample

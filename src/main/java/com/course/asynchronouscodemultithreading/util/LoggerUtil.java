@@ -8,20 +8,4 @@ public class LoggerUtil
     {
         System.out.println("[" + Thread.currentThread().getName() + "] - " + message);
     }
-
-    public static void startTimer()
-    {
-        stopWatch.start();
-    }
-
-    public static void stopTimer()
-    {
-        stopWatch.stop();
-        log("Total time taken: " + stopWatch.getTime());
-    }
-
-    public static void resetTimer()
-    {
-        stopWatch.reset();
-    }
 }

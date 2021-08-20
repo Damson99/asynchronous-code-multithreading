@@ -3,6 +3,7 @@ package com.course.asynchronouscodemultithreading.util;
 import org.apache.commons.lang3.time.StopWatch;
 
 
+import static com.course.asynchronouscodemultithreading.util.LoggerUtil.*;
 import static java.lang.Thread.sleep;
 
 public class CommonUtil
@@ -16,7 +17,23 @@ public class CommonUtil
             sleep(delayInMilliSeconds);
         } catch (InterruptedException e)
         {
-            LoggerUtil.log("Exception is: " + e.getMessage());
+            log("Exception is: " + e.getMessage());
         }
+    }
+
+    public static void startTimer()
+    {
+        stopWatch.start();
+    }
+
+    public static void stopTimer()
+    {
+        stopWatch.stop();
+        log("Total time taken: " + stopWatch.getTime());
+    }
+
+    public static void resetTimer()
+    {
+        stopWatch.reset();
     }
 }

@@ -8,7 +8,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static com.course.asynchronouscodemultithreading.util.LoggerUtil.*;
+import static com.course.asynchronouscodemultithreading.util.CommonUtil.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 class ParallelStreamExampleTest

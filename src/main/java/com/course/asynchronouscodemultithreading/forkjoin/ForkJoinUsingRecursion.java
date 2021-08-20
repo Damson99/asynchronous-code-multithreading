@@ -8,7 +8,7 @@ import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.ForkJoinTask;
 import java.util.concurrent.RecursiveTask;
 
-import static com.course.asynchronouscodemultithreading.util.CommonUtil.delay;
+import static com.course.asynchronouscodemultithreading.util.CommonUtil.*;
 import static com.course.asynchronouscodemultithreading.util.LoggerUtil.*;
 
 public class ForkJoinUsingRecursion extends RecursiveTask<List<String>>
