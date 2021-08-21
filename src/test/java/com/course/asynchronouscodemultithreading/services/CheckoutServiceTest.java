@@ -9,6 +9,8 @@ import com.course.asynchronouscodemultithreading.service.PriceValidatorService;
 import com.course.asynchronouscodemultithreading.util.DataSet;
 import org.junit.jupiter.api.Test;
 
+import java.util.concurrent.ForkJoinPool;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 public class CheckoutServiceTest
@@ -24,9 +26,26 @@ public class CheckoutServiceTest
     }
 
     @Test
+    void
+    parallelism()
+    {
+        System.out.println("parallelism: " + ForkJoinPool.getCommonPoolParallelism());
+    }
+
+    @Test
     void checkout()
     {
         Cart cart = DataSet.createCart(9);
+
+        CheckoutResponse checkoutResponse = checkoutService.checkout(cart);
+        assertEquals(CheckoutStatus.FAILURE, checkoutResponse.getCheckoutStatus());
+    }
+
+    @Test
+    void modifyParallelism()
+    {
+        System.setProperty("java.util.concurrent.ForkJoinPool.common.parallelism", "100");
+        Cart cart= DataSet.createCart(100);
 
         CheckoutResponse checkoutResponse = checkoutService.checkout(cart);
 

@@ -1,7 +1,5 @@
 package com.course.asynchronouscodemultithreading.parallelstreams;
 
-import com.course.asynchronouscodemultithreading.util.CommonUtil;
-import com.course.asynchronouscodemultithreading.util.LoggerUtil;
 
 import java.util.ArrayList;
 import java.util.List;

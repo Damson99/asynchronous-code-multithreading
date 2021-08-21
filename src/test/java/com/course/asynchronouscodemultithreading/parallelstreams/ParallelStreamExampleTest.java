@@ -27,8 +27,6 @@ class ParallelStreamExampleTest
 
         assertEquals(4, resultList.size());
         resultList.forEach(name -> assertTrue(name.contains("-")));
-
-
     }
 
     @ParameterizedTest
@@ -58,6 +56,5 @@ class ParallelStreamExampleTest
         assertEquals(4, names.size());
         List<String> checkList =  names.stream().map(String::toUpperCase).collect(Collectors.toList());
         assertEquals(checkList, resultList);
-
     }
 }

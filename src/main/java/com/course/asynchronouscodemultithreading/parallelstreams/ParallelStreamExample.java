@@ -9,6 +9,10 @@ import java.util.stream.Stream;
 import static com.course.asynchronouscodemultithreading.util.CommonUtil.*;
 import static com.course.asynchronouscodemultithreading.util.LoggerUtil.*;
 
+//zeby zmienic ilosc watkow w parallelStream uzyj
+//System.setProperty("java.util.concurrent.ForkJoinPool.common.parallelism", "100");
+//lub
+//-Djava.util.concurrent.ForkJoinPool.common.parallelism=100
 public class ParallelStreamExample
 {
     public List<String> stringTransform(List<String> names)
