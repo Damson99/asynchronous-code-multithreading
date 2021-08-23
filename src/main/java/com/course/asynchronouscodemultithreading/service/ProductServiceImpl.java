@@ -1,32 +1,79 @@
 package com.course.asynchronouscodemultithreading.service;
 
-import com.course.asynchronouscodemultithreading.domain.Product;
-import com.course.asynchronouscodemultithreading.domain.ProductInfo;
-import com.course.asynchronouscodemultithreading.domain.ProductReview;
+import com.course.asynchronouscodemultithreading.domain.*;
 
+import java.util.List;
 import java.util.concurrent.*;
+import java.util.stream.Collectors;
 
-import static com.course.asynchronouscodemultithreading.util.CommonUtil.stopWatch;
+import static com.course.asynchronouscodemultithreading.util.CommonUtil.delay;
 import static com.course.asynchronouscodemultithreading.util.LoggerUtil.*;
 
 
 public class ProductServiceImpl implements ProductService
 {
     private static final ExecutorService executorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
-    private ProductInfoService productInfoService;
-    private ProductReviewService productReviewService;
+    private final ProductReviewService productReviewService;
+    private final ProductInfoService productInfoService;
+    private final InventoryService inventoryService;
 
 
-    public ProductServiceImpl(ProductInfoService productInfoService, ProductReviewService productReviewService)
+    public ProductServiceImpl(ProductInfoService productInfoService, ProductReviewService productReviewService, InventoryService inventoryService)
     {
         this.productInfoService = productInfoService;
         this.productReviewService = productReviewService;
+        this.inventoryService = inventoryService;
     }
 
-    public Product retrieveProductDetails(String productId) throws InterruptedException, ExecutionException, TimeoutException
+    public Product retrieveProductDetails(String productId)
     {
-        stopWatch.start();
+        CompletableFuture<ProductInfo> cfProductInfo = CompletableFuture
+                .supplyAsync(() -> productInfoService.retrieveProductInfo(productId))
+                .thenApply((productInfo ->
+                {
+                    productInfo.setProductOptions(updateInventory(productInfo));
+                    return productInfo;
+                }));
 
+        CompletableFuture<ProductReview> cfProductReview = CompletableFuture
+                .supplyAsync(() -> productReviewService.retrieveReviews(productId));
+
+        return cfProductInfo
+                .thenCombine(cfProductReview, (productInfo, productReview) -> new Product(productId, productInfo, productReview))
+                .join(); //blocking the thread
+    }
+
+    public CompletableFuture<Product> retrieveProductDetailsWithoutClientBlocking(String productId)
+    {
+        CompletableFuture<ProductInfo> cfProductInfo = CompletableFuture
+                .supplyAsync(() -> productInfoService.retrieveProductInfo(productId));
+        CompletableFuture<ProductReview> cfProductReview = CompletableFuture
+                .supplyAsync(() -> productReviewService.retrieveReviews(productId));
+
+        return cfProductInfo
+                .thenCombine(cfProductReview, (productInfo, productReview) -> new Product(productId, productInfo, productReview));
+    }
+
+    private List<ProductOption> updateInventory(ProductInfo productInfo) {
+        List<CompletableFuture<ProductOption>> cfProductOption = productInfo.getProductOptions()
+                .stream()
+                .map(productOption ->
+                {
+                    return CompletableFuture.supplyAsync(() -> inventoryService.retrieveInventory(productOption))
+                            .thenApply(inventory ->
+                            {
+                                productOption.setInventory(inventory);
+                                return productOption;
+                            });
+                }).collect(Collectors.toList());
+
+        return cfProductOption.stream().map(CompletableFuture::join).collect(Collectors.toList());
+    }
+
+
+
+    @Deprecated
+    public Product retrieveProductDetailsOld(String productId) throws InterruptedException, ExecutionException, TimeoutException {
 //        NON BLOCKING CALLS
 //        ProductInfo productInfo = productInfoService.retrieveProductInfo(productId);   //blocking call
 //        ProductReview productReview = productReviewService.retrieveReviews(productId); //blocking call
@@ -52,15 +99,14 @@ public class ProductServiceImpl implements ProductService
         Future<ProductReview> productReviewFuture = executorService.submit(() -> productReviewService.retrieveReviews(productId));
         while(!productReviewFuture.isDone())
         {
-            Thread.sleep(100);
+            delay(100);
             System.out.println("Processing...");
         }
 
         ProductInfo productInfo = productInfoFuture.get(2, TimeUnit.SECONDS);
         ProductReview productReview = productReviewFuture.get();
 
-        stopWatch.stop();
-        log("Total time taken: " + stopWatch.getTime());
+        log("Total time taken: ");
         return new Product(productId, productInfo, productReview);
     }
 
@@ -112,7 +158,8 @@ public class ProductServiceImpl implements ProductService
     {
         ProductInfoService productInfoService = new ProductInfoService();
         ProductReviewService productReviewService = new ProductReviewService();
-        ProductService productService = new ProductServiceImpl(productInfoService, productReviewService);
+        InventoryService inventoryService = new InventoryService();
+        ProductService productService = new ProductServiceImpl(productInfoService, productReviewService, inventoryService);
         String productId = "ABC123";
         Product product = productService.retrieveProductDetails(productId);
         log("Product is: " + product);

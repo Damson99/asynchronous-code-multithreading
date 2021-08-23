@@ -18,7 +18,7 @@ public class HelloWorldService
     {
         delay(1000);
         log("inside hello");
-        return "hello";
+        return "hello ";
     }
 
     public String world()
@@ -28,13 +28,13 @@ public class HelloWorldService
         return "world!";
     }
 
-    public CompletableFuture<String> helloWorld(String input)
+    public CompletableFuture<String> helloWorldWithCompletableFuture(String input)
     {
         return CompletableFuture
                 .supplyAsync(() ->
         {
             delay(1000);
-            return input + "world";
+            return input + "world!";
         });
     }
 }
