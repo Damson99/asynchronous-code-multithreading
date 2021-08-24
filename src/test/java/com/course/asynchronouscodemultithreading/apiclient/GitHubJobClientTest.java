@@ -9,7 +9,7 @@ import java.util.List;
 
 import static com.course.asynchronouscodemultithreading.util.CommonUtil.startTimer;
 import static com.course.asynchronouscodemultithreading.util.CommonUtil.stopTimer;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 class GitHubJobClientTest
 {
@@ -71,5 +71,17 @@ class GitHubJobClientTest
 
         assertTrue(gitHubJobs.size() > 0);
         gitHubJobs.forEach(Assertions::assertNotNull);
+    }
+
+    @Test
+    void invokeGitHubJobWithPageAndDescriptionAsyncWithAnyOf()
+    {
+        startTimer();
+        String gitHubJobs = gitHubJobClient
+                .retrieveDataFromFastestSourcesAsyncWithAnyOf();
+        stopTimer();
+
+        assertNotNull(gitHubJobs);
+        assertEquals("db call", gitHubJobs);
     }
 }

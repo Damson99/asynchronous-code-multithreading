@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
+import static com.course.asynchronouscodemultithreading.util.CommonUtil.delay;
 import static com.course.asynchronouscodemultithreading.util.LoggerUtil.log;
 
 public class GitHubJobClient
@@ -51,13 +52,13 @@ public class GitHubJobClient
 
     public List<GitHubJob> invokeGitHubJobWithPageAndDescriptionAsync(List<Integer> pageNumbers, String description)
     {
-        List<CompletableFuture<List<GitHubJob>>> CFGitHubJob =
+        List<CompletableFuture<List<GitHubJob>>> cfGitHubJob =
                 pageNumbers
                         .stream()
                         .map(pageNumber -> CompletableFuture.supplyAsync(() -> invokeGitHubJobWithPageAndDescription(pageNumber, description)))
                         .collect(Collectors.toList());
 
-        return CFGitHubJob
+        return cfGitHubJob
                 .stream()
                 .map(CompletableFuture::join)
                 .flatMap(Collection::stream)
@@ -85,5 +86,44 @@ public class GitHubJobClient
                 .flatMap(Collection::stream)
                 .collect(Collectors.toList()))
                 .join();
+    }
+
+//    anyOf() zwraca najszybciej dostarczone dane uzywajac parallelStream(), ktore sa takie same i pochodza z roznych zrodel
+//    np sa 3 calle przychodzace zawierajace te same dane
+//    - z bazy danych, soap i rest api - i jesli pierwszy przyjdzie z bazy to zostanie obsluzony a reszta porzucona
+    public String retrieveDataFromFastestSourcesAsyncWithAnyOf()
+    {
+        CompletableFuture<String> dbCall = CompletableFuture.supplyAsync(() ->
+        {
+            log("db call");
+            delay(0);
+            return "db call";
+        });
+
+        CompletableFuture<String> soapCall = CompletableFuture.supplyAsync(() ->
+        {
+            log("soap call");
+            delay(1000);
+            return "soap call";
+        });
+
+        CompletableFuture<String> restapiCall = CompletableFuture.supplyAsync(() ->
+        {
+            log("restapi call");
+            delay(1500);
+            return "restapi call";
+        });
+
+        List<CompletableFuture<String>> cfList = List.of(dbCall, soapCall, restapiCall);
+        CompletableFuture<Object> sourcesAnyOf = CompletableFuture.anyOf(cfList.toArray(new CompletableFuture[cfList.size()]));
+
+        return (String) sourcesAnyOf
+                .thenApply(var ->
+                {
+                    if(var instanceof String)
+                        return var;
+                    else
+                        return null;
+                }).join();
     }
 }
