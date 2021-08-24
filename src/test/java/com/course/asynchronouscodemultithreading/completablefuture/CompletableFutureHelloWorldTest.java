@@ -49,6 +49,10 @@ class CompletableFutureHelloWorldTest
     void helloWorldThreeAsyncCalls()
     {
         startTimer();
+
+        when(helloWorldService.hello()).thenCallRealMethod();
+        when(helloWorldService.world()).thenCallRealMethod();
+
         String helloWorldAsyncCalls = completableFutureHelloWorld.helloWorldThreeAsyncCalls();
         stopTimer();
         assertEquals("HELLO WORLD! HI COMPLETABLEFUTURE!", helloWorldAsyncCalls);

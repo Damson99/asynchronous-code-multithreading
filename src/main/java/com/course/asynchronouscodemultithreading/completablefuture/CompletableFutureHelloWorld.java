@@ -3,8 +3,9 @@ package com.course.asynchronouscodemultithreading.completablefuture;
 import com.course.asynchronouscodemultithreading.service.HelloWorldService;
 
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 
-import static com.course.asynchronouscodemultithreading.util.CommonUtil.*;
 import static com.course.asynchronouscodemultithreading.util.LoggerUtil.log;
 
 public class CompletableFutureHelloWorld
@@ -44,16 +45,32 @@ public class CompletableFutureHelloWorld
         log("Done!");
     }
 
+//    CompletableFuture i ParallelStream uzywa tego samego ThreadPool, dlatego mozemy zdefiniowac wlasny
+//    zeby nie doprowadzic do wycieku pamieci
     public String helloWorldThreeAsyncCalls()
     {
-        CompletableFuture<String> hello = CompletableFuture.supplyAsync(helloWorldService::hello);
-        CompletableFuture<String> world = CompletableFuture.supplyAsync(helloWorldService::world);
-        CompletableFuture<String> sentence =  CompletableFuture.supplyAsync(() -> " Hi CompletableFuture!");
+        Executor threadPool = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+
+        CompletableFuture<String> hello = CompletableFuture.supplyAsync(helloWorldService::hello, threadPool);
+        CompletableFuture<String> world = CompletableFuture.supplyAsync(helloWorldService::world, threadPool);
+        CompletableFuture<String> sentence =  CompletableFuture.supplyAsync(() -> " Hi CompletableFuture!", threadPool);
 
         return hello
-                .thenCombine(world, String::concat)
-                .thenCombine(sentence, String::concat)
-                .thenApply(String::toUpperCase)
+                .thenCombine(world, (h, w) ->
+                {
+                    log("thenCombine(h, w)");
+                    return h.concat(w);
+                })
+                .thenCombine(sentence, (prev, curr) ->
+                {
+                    log("thenCombine(prev, curr)");
+                    return prev.concat(curr);
+                })
+                .thenApply((result) ->
+                {
+                    log("thenApply(result)");
+                    return result.toUpperCase();
+                })
                 .join();
     }
 
