@@ -8,6 +8,9 @@ import java.util.concurrent.Executors;
 
 import static com.course.asynchronouscodemultithreading.util.LoggerUtil.log;
 
+
+
+// UZYWAJ CompletableFuture gdy masz do wykonania blocking calls, w innym przypadku uzywaj parallelStream()
 public class CompletableFutureHelloWorld
 {
     private final HelloWorldService helloWorldService;
@@ -67,6 +70,37 @@ public class CompletableFutureHelloWorld
                     return prev.concat(curr);
                 })
                 .thenApply((result) ->
+                {
+                    log("thenApply(result)");
+                    return result.toUpperCase();
+                })
+                .join();
+    }
+
+//    dzieki uzywaniu np. thenCombineAsync() jestesmy w stanie dla kazdego takiego wyrazenia lamba wygenerowac oddzielne watki
+//    i jako drugi argument dajemy nasz costomowy ThreadPool
+//    nie jest to wskazane, ale gdy pojawia sie problemy wydajnosciowe podczas wspodzielenia puli watkow dla CompletableFuture
+//    i parallelStream mozna sprobowac uzyc takiej implementacji
+    public String helloWorldThreeAsyncCallsWithAsyncPipeline()
+    {
+        Executor threadPool = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+
+        CompletableFuture<String> hello = CompletableFuture.supplyAsync(helloWorldService::hello, threadPool);
+        CompletableFuture<String> world = CompletableFuture.supplyAsync(helloWorldService::world, threadPool);
+        CompletableFuture<String> sentence =  CompletableFuture.supplyAsync(() -> " Hi CompletableFuture!", threadPool);
+
+        return hello
+                .thenCombineAsync(world, (h, w) ->
+                {
+                    log("thenCombine(h, w)");
+                    return h.concat(w);
+                })
+                .thenCombineAsync(sentence, (prev, curr) ->
+                {
+                    log("thenCombine(prev, curr)");
+                    return prev.concat(curr);
+                })
+                .thenApplyAsync((result) ->
                 {
                     log("thenApply(result)");
                     return result.toUpperCase();
