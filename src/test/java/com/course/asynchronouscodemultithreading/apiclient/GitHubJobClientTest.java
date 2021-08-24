@@ -57,4 +57,19 @@ class GitHubJobClientTest
         assertTrue(gitHubJobs.size() > 0);
         gitHubJobs.forEach(Assertions::assertNotNull);
     }
+
+    @Test
+    void invokeGitHubJobWithPageAndDescriptionAsyncWithAllOf()
+    {
+        List<Integer> arrayOfIntegers = List.of(1,2,3,4,5,6,7,8,9,10);
+        String description = "Java";
+
+        startTimer();
+        List<GitHubJob> gitHubJobs = gitHubJobClient
+                .invokeGitHubJobWithPageAndDescriptionAsyncWithAllOf(arrayOfIntegers, description);
+        stopTimer();
+
+        assertTrue(gitHubJobs.size() > 0);
+        gitHubJobs.forEach(Assertions::assertNotNull);
+    }
 }

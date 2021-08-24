@@ -63,4 +63,27 @@ public class GitHubJobClient
                 .flatMap(Collection::stream)
                 .collect(Collectors.toList());
     }
+
+//    allOf() funkcja zwraca typ Void, ale czeka az wszystkie CompletableFuture sie wykonaja w porownaniu do funkcji join,
+//    ktora wyrzuci natychmiast unchecked CompletionException
+//    wedlug testow najbardziej wydajne pod wzgledem czasu wykonania
+    public List<GitHubJob> invokeGitHubJobWithPageAndDescriptionAsyncWithAllOf(List<Integer> pageNumbers, String description)
+    {
+        List<CompletableFuture<List<GitHubJob>>> cfGitHubJob =
+                pageNumbers
+                        .stream()
+                        .map(pageNumber -> CompletableFuture.supplyAsync(() -> invokeGitHubJobWithPageAndDescription(pageNumber, description)))
+                        .collect(Collectors.toList());
+
+        CompletableFuture<Void> cfAllOf = CompletableFuture.allOf(cfGitHubJob.toArray(new CompletableFuture[cfGitHubJob.size()]));
+
+//        w tym momencie wykorzystujemy join(), ale dzieki funkcji allOf() i tak wszystkie CompletableFuture zostaly wykonane
+//        ta czesc kodu zostanie wykonana gdy allOf() sie wykona
+        return cfAllOf
+                .thenApply(var -> cfGitHubJob.stream()
+                .map(CompletableFuture::join)
+                .flatMap(Collection::stream)
+                .collect(Collectors.toList()))
+                .join();
+    }
 }
